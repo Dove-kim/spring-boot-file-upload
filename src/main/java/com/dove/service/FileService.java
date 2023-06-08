@@ -16,6 +16,12 @@ public class FileService {
     @Value("${file.upload-path}")
     private String uploadDirectory;
 
+    /**
+     * 단일 파일 저장
+     * 
+     * @param multipartFile
+     * @return 저장 성공여부
+     */
     public boolean saveFile(MultipartFile multipartFile) {
         //파일이 없으면 별도의 처리를 한다.
         if (multipartFile == null || multipartFile.isEmpty()) {
