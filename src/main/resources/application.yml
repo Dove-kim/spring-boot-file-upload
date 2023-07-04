@@ -1,9 +1,14 @@
 spring:
+  config:
+    import:
+      - classpath:credential.yml
   servlet:
     multipart:
       max-file-size: 1GB
       max-request-size: 2GB
 
-file:
-  upload-path: files
-
+cloud:
+  aws:
+    region:
+      static: ap-south-1
+      auto: false
