@@ -25,23 +25,9 @@ public class LinodeConfig {
                 linodeProperties.getCredentials().secretKey()
         );
 
-
         return AmazonS3ClientBuilder.standard()
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("https://ap-south-1.linodeobjects.com", linodeProperties.getRegion()))
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();
-
-//        new AmazonS3Client(credentials,new ClientConfiguration(n));
-//        return AmazonS3ClientBuilder
-//                .standard()
-//                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-////                .withRegion(region)
-//                .build();
-//        return AmazonS3ClientBuilder
-//                .standard()
-//                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-//                        "https://" + linodeProperties.getRegion() + ".linodeobjects.com" + linodeProperties.getBucket(), linodeProperties.getRegion()))
-//                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-//                .build();
     }
 }

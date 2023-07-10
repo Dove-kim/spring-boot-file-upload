@@ -1,13 +1,19 @@
 package com.dove.controller;
 
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
+import com.amazonaws.services.s3.model.UploadPartResult;
+import com.dove.dto.ChunkedFileCompleteRequest;
+import com.dove.dto.ChunkedFileUploadRequest;
+import com.dove.service.ChunkedFileService;
 import com.dove.util.AwsS3;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @Slf4j
 @RequestMapping("/files/chunked-files")
@@ -15,60 +21,43 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ChunkedFileController {
     private final AwsS3 awsS3;
-    private final ChunkedFileUploadService chunkedFileUploadService;
+    private final ChunkedFileService chunkedFileService;
 
     @PostMapping("/upload-key")
-    public V2Response getChunkedFileUploadKey(
-            @Validated
-            @RequestBody ChunkedFileUploadStartRequest chunkedFileUploadStartRequest) {
+    public ResponseEntity getChunkedFileUploadKey() {
 
-        Long fileChunkedId = chunkedFileUploadService.generateChunkedFileUploadKey(
-                chunkedFileUploadStartRequest.fileUploadType(),
-                chunkedFileUploadStartRequest.fileExt()
-        );
+        //업로드 키 생성
+        InitiateMultipartUploadResult initiateMultipartUploadResult = chunkedFileService.initiateUploadChunkedFile();
 
-        return V2Response.builder()
-                .result("SUCCESS")
-                .data(new ChunkedFileUploadKeyResponse(fileChunkedId))
-                .build();
+        return ResponseEntity.ok(initiateMultipartUploadResult.getUploadId());
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public V2Response uploadFile(
+    public ResponseEntity uploadFile(
             @Validated
             @ModelAttribute
             ChunkedFileUploadRequest chunkedFileUploadRequest
-    ) throws MissingServletRequestParameterException {
-        if (chunkedFileUploadRequest.file() == null || chunkedFileUploadRequest.file().isEmpty()) {
-            throw new MissingServletRequestParameterException(
-                    chunkedFileUploadRequest.file().getName(),
-                    chunkedFileUploadRequest.file().getContentType()
-            );
-        }
+    ) throws IOException {
 
-        chunkedFileUploadService.uploadChunkedFile(
-                chunkedFileUploadRequest.fileChunkedId(),
+        UploadPartResult uploadPartResult = chunkedFileService.uploadChunkedFile(
+                chunkedFileUploadRequest.uploadKey(),
                 chunkedFileUploadRequest.chunkSeq(),
                 chunkedFileUploadRequest.file()
         );
 
-        return V2Response.builder()
-                .result("SUCCESS")
-                .build();
+        return ResponseEntity.ok(uploadPartResult.getPartETag().getETag());
     }
 
     @PostMapping("/complete-file-upload")
-    public V2Response completeFileUpload(@RequestBody ChunkedFileCompleteRequest chunkedFileCompleteRequest) {
-        String fileUrl = chunkedFileUploadService.mergeChunkedFile(chunkedFileCompleteRequest.fileChunkedId());
+    public ResponseEntity completeFileUpload(
+            @RequestBody
+            ChunkedFileCompleteRequest chunkedFileCompleteRequest) {
+        chunkedFileService.mergeChunkedFile(chunkedFileCompleteRequest.uploadId(), chunkedFileCompleteRequest.eTagList());
 
-        return V2Response.builder()
-                .result("SUCCESS")
-                .data(new ChunkedFileCompleteResponse(fileUrl))
-                .build();
+        return ResponseEntity.ok("SUCCESS");
     }
 
-    @GetMapping("/testtest")
+    @GetMapping("/clean")
     public String cleanUp() {
         awsS3.cleanUp();
         return "OK";

@@ -9,6 +9,8 @@ spring:
 
 cloud:
   aws:
+    stack:
+      auto: false
     region:
       static: ap-south-1
-      auto: false
+
