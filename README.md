@@ -1,8 +1,8 @@
 # Spring boot를 이용해서 만드는 파일 업로드 서버
 
 ## 목표
-1. Linode의 파일 저장소, Linode PostgreSQL DB를 이요해본다.
-2. 파일을 multiFormPart로 받아서 저장하고 이력도 남긴다.
+1. 파일을 multiFormPart로 받아서 저장하고 이력도 남긴다.
+2. Linode의 파일 저장소, Linode PostgreSQL DB를 이용해본다.(가능하면..)
 
 ## 목표가 아닌것
 1. 분할 파일 업로드(대용량 파일을 위한 기능)
